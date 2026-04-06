@@ -1,20 +1,9 @@
+@import url("98.css");
+
 /*
     FONT STUFF
  */
-@font-face {
 
-    font-family: "Pixelated MS Sans Serif 16px";
-    font-style: normal;
-    font-weight: 400;
-    src: url(../fonts/pixel16.ttf) format("truetype");
-}
-
-@font-face {
-    font-family: "Pixelated MS Sans Serif 16px";
-    font-style: normal;
-    font-weight: 700;
-    src: url(../fonts/pixel16bold.ttf) format("truetype");
-}
 
 .font-13px {
     font-family: "Pixelated MS Sans Serif", Arial, sans-serif;
@@ -23,6 +12,42 @@
 /*
     GENERAL STUFF
  */
+
+.flex-row {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.gap-4 {
+    gap: 4px;
+}
+
+.gap-6 {
+    gap: 6px;
+}
+
+.gap-8 {
+    gap: 8px;
+}
+
+.margin-top-1 {
+    margin-top: 1rem;
+}
+
+.margin-bottom-1 {
+    margin-bottom: 1rem;
+}
+
+img {
+    image-rendering: pixelated;
+}
+
+.margin-y-1 {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
 
 .sunken-panel {
     margin-top: 12px;
@@ -68,23 +93,41 @@ h1, h2, h3, h4 {
     flex-direction: column
 }
 
-.filter-row {
+.no-growth {
+    flex-grow: 0;
+}
+
+a.fake {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/*https://stackoverflow.com/questions/20937475/remove-datalist-dropdown-arrow-in-chrome*/
+input[type=email]::-webkit-calendar-picker-indicator {
+    display: none !important;
+}
+
+td.actions {
     display: flex;
-    flex-direction: row;
+    flex-direction: row-reverse;
+    align-items: center;
     gap: 6px;
     flex-wrap: wrap;
+}
+
+td.actions form {
+    margin-block-end: 0;
+}
+
+td.fit {
+    width: 0;
+    white-space: nowrap;
 }
 
 
 /*
     WINDOW STUFF
  */
-
-/* Override the font used in windows from 98.css */
-.title-bar, .window, button, input, label, legend, li[role=tab], option, select, table, textarea, ul.tree-view {
-    font-size: 16px;
-    font-family: "Pixelated MS Sans Serif 16px", Arial, sans-serif;
-}
 
 .window {
     display: flex;
@@ -123,7 +166,7 @@ h1, h2, h3, h4 {
     margin-left: 8px;
 }
 
-.basic-form > .field-row-stacked {
+.basic-form .field-row-stacked {
     width: fit-content;
     min-width: 150px;
 }
@@ -147,6 +190,13 @@ input[type=file]::file-selector-button:active {
     text-shadow: 1px 1px #222
 }
 
+.input-horizontal-container {
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+    align-items: center;
+}
+
 /*
     SIDENAV STUFF
  */
@@ -164,11 +214,10 @@ input[type=file]::file-selector-button:active {
     gap: 2px;
 }
 
-.sidenav-body button {
+.sidenav-body button, .sidenav-body input[type=submit] {
     padding: 8px;
     width: 100%;
     font-weight: bold;
-
 }
 
 .sidenav-body a button:hover {
@@ -189,27 +238,6 @@ input[type=file]::file-selector-button:active {
     display: flex;
     align-items: center;
     padding: 2px 4px;
-}
-
-@media only screen and (max-width: 768px) {
-    #sidenav {
-        position: fixed;
-        z-index: 1;
-        bottom: 2.5rem;
-    }
-
-    .common-body {
-        left: 4px;
-        flex-direction: column;
-    }
-
-    .bottom-nav-bar {
-        flex-direction: column;
-        display: block;
-        min-height: 2rem;
-        flex-shrink: 0;
-    }
-    margin: 2px;
 }
 
 /*
@@ -235,12 +263,10 @@ input[type=file]::file-selector-button:active {
  */
 
 
-.project-list {
+.sunken-panel.list {
     max-height: 20rem;
-}
-
-.ticket-list {
-    max-height: 20rem;
+    width: fit-content;
+    min-width: 500px;
 }
 
 
@@ -316,8 +342,6 @@ input[type=file]::file-selector-button:active {
     flex-direction: row;
     align-items: center;
     gap: 8px;
-    margin-top: 8px;
-    margin-bottom: 16px;
 }
 
 #success-message {
@@ -335,18 +359,31 @@ input[type=file]::file-selector-button:active {
     POPUP
  */
 
-#popup-container {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
+dialog {
+    padding: 0;
+    border: none;
 }
 
-#popup-window .message {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 16px;
+@media only screen and (max-width: 768px) {
+    #sidenav {
+        position: fixed;
+        z-index: 1;
+        bottom: 2.5rem;
+    }
+
+    .common-body {
+        left: 4px;
+        flex-direction: column;
+    }
+
+    .bottom-nav-bar {
+        flex-direction: column;
+        display: block;
+        min-height: 2rem;
+        flex-shrink: 0;
+    }
+
+    .sunken-panel.list {
+        min-width: 300px;
+    }
 }

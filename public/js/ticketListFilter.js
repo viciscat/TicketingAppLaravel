@@ -1,4 +1,4 @@
-function updateFilters() {
+function updateFilers() {
     const ticketType = document.getElementById('ticket-type-filter').value.toLowerCase();
     const ticketStatus = document.getElementById('ticket-status-filter').value.toLowerCase();
 

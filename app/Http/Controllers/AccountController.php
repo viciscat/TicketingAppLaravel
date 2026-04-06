@@ -17,8 +17,4 @@ class AccountController extends Controller
     public function register() {
         return view('account.register');
     }
-
-    public function viewProfile() {
-        return view('account.profile');
-    }
 }

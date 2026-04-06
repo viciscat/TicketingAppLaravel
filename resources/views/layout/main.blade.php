@@ -23,6 +23,10 @@ function button($route, $name): void
         button("profile", "Profile");
         button("settings", "Settings");
         ?>
+        <form action="{{route("logout")}}" method="post">
+            @csrf
+            <input type="submit" value="Logout" />
+        </form>
 
     </div>
 </div>

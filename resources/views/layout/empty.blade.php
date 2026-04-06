@@ -2,13 +2,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Ticketing98 - @yield('title')</title>
-    <link href="https://unpkg.com/98.css@0.1.21/dist/98.css" rel="stylesheet" type="text/css"/>
     <link href="{{asset("css/styles.css")}}" rel="stylesheet" type="text/css">
     <script src="{{ asset('js/index.js') }} " type="text/javascript" defer></script>
     <script src="{{asset('js/formHelper.js')}}" defer type="text/javascript"></script>
+    <script>
+        function csrf(headers) {
+            headers['X-CSRF-Token'] = document.querySelector('meta[name="csrf-token"]')?.content
+            return headers;
+        }
+    </script>
 </head>
 <body class="@yield('body_class')">
 @yield("body")
+@yield("inline-script")
 </body>
 </html>

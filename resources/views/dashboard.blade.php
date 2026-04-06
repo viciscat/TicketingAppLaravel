@@ -1,46 +1,46 @@
+@php use App\Enums\UserRole; @endphp
 @extends("layout.main")
 @section("title")
     Dashboard
 @endsection
 @section("content")
-    UNIMPLEMENTED
-    <div style="display: flex; flex-direction: row; gap: 8px; flex-wrap: wrap; margin: 16px">
-        <div class="dashboard-statistic window">
-            <img alt="Icon" class="statistic-icon" src="{{asset("images/icons/ticket.png")}}"/>
-
-            <div class="statistic-text">
-                <div class="statistic-title">New Tickets</div>
-                <div class="statistic-number">10</div>
-            </div>
+    <div style="margin: 16px; align-items: stretch" class="flex-row gap-8">
+        @foreach($statistics as $statistic)
+            <x-dashboard-statistic :widget="$statistic"/>
+        @endforeach
+    </div>
+    @if($role != UserRole::CLIENT)
+        <div>
+            <p>
+            <b>Your assigned tickets:</b>
+            </p>
+            <x-ticket-list assigned-to-me/>
         </div>
-        <div class="dashboard-statistic window">
-            <img alt="Icon" class="statistic-icon" src="{{asset("images/icons/ticket_due.png")}}"/>
+    @endif
+    <div>
+        <p>
+            <b>Ticket count by status:</b>
+        </p>
+        <div class="sunken-panel" style="width: fit-content">
+            <table>
+                <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Count</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach($countByStatus as $c)
+                    <tr>
+                        <td>{{ $c['status'] }}</td>
+                        <td>{{ $c['count'] }}</td>
+                    </tr>
+                @endforeach
 
-            <div class="statistic-text">
-                <div class="statistic-title">Tickets Past Due</div>
-                <div class="statistic-number">1</div>
-            </div>
+                </tbody>
+            </table>
         </div>
     </div>
-    <b>Your assigned tickets:</b>
-    <div class="sunken-panel ticket-list">
-        <table>
-            <thead>
-            <tr>
-                <th>ID</th>
-                <th>Status</th>
-                <th>Title</th>
-                <th>Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-                <td><a href="#">SKB-1</a></td>
-                <td>In progress</td>
-                <td>Ticket Name Go Here :)</td>
-                <td><a href="tickets/view.blade.php">[View]</a></td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
+
+
 @endsection
