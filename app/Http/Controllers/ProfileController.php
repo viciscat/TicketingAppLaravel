@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ProfileUpdateRequest;
+use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,15 +13,18 @@ use Illuminate\View\View;
 class ProfileController extends Controller
 {
 
+    private function viewInternal(User $user) {
+        return view('profile.view', ['user' => $user, 'canEditRole' => Auth::user()->role == UserRole::ADMIN, 'self' => Auth::user()->id == $user->id]);
+    }
+
     public function viewSelf() {
-        $user = Auth::user();
-        return view('profile.view', ['user' => $user]);
+        return $this->viewInternal(Auth::user());
     }
 
     public function view($id) {
         $user = User::find($id);
-        // TODO check if it exists
-        return view('profile.view', ['user' => $user]);
+        if (!$user) return view('error', ['message' => 'User not found', 'goBack' => 'dashboard']);
+        return $this->viewInternal($user);
     }
 
     /**
@@ -29,7 +32,6 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
-        // TODO edit page
         return view('profile.edit', [
             'user' => $request->user(),
         ]);

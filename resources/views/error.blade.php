@@ -5,5 +5,5 @@
 
 @section("content")
     <p>{{ $message }}</p>
-    <button onclick="location.href = '{{ route($goBack) }}'">Go Back</button>
+    <button onclick="location.href = '{{ $goBack }}'">Go Back</button>
 @endsection

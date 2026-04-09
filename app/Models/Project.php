@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\UserRole;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -30,5 +31,15 @@ class Project extends Model
     public function hasMember(User $user): bool
     {
         return $this->members()->where('user_id', $user->id)->exists();
+    }
+
+    public function hasAccess(User $user): bool
+    {
+        return $user->role == UserRole::ADMIN || $this->hasMember($user);
+    }
+
+    public function canEdit(User $user): bool
+    {
+        return $user->role == UserRole::ADMIN;
     }
 }

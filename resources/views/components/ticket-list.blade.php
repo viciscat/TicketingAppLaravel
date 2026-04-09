@@ -7,15 +7,15 @@
         $statusOptions = ["all" => 'All'] + $statusOptions;
         $typeOptions = ["all" => 'All'] + $typeOptions;
 @endphp
-<div>
+<div {{ $attributes }}>
     <div class="flex-row gap-6">
         <div class="field-stacked">
             <label for="ticket-type-filter">Ticket Type</label>
-            <x-select id="ticket-type-filter" :options="$typeOptions" onchange="updateList()" :default="$defaultStatus"/>
+            <x-select id="ticket-type-filter" :options="$typeOptions" onchange="updateList()"/>
         </div>
         <div class="field-stacked">
             <label for="ticket-status-filter">Ticket Status</label>
-            <x-select id="ticket-status-filter" :options="$statusOptions" onchange="updateList()"/>
+            <x-select id="ticket-status-filter" :options="$statusOptions" onchange="updateList()" :default="$defaultStatus"/>
         </div>
         <div class="field-stacked">
             <label for="search">Search</label>
@@ -100,12 +100,6 @@
                     <td>${ticket['status']}</td>
                     <td class="actions">
                         <a href="${ticket['ticket_route']}">[View]</a>
-                        <form action="{{route('tickets.destroy')}}" method="post">
-                            @csrf
-                            @method('DELETE')
-                        <input type="hidden" name="id" value="${ticket.id}">
-                            <a href="javascript:{}" onclick="this.parentNode.submit()">[Delete]</a>
-                        </form>
                     </td>
                 </tr>
                 `;

@@ -43,7 +43,7 @@
             <div class="field-row-stacked">
                 <input type="hidden" id="collaborators" name="collaborators" value="{{ old('collaborators') }}"/>
                 <span>Collaborators</span>
-                <div class="collaborators-input-container">
+                <div class="flex-row gap-8">
                     <div class="sunken-panel" style="min-height: 8rem; min-width: 150px">
                         <table id="collaborators-table">
                             <thead>
@@ -85,7 +85,7 @@
             const row = `
                         <tr>
                             <td>${email}</td>
-                            <td><a href="javascript:{}" onclick="remove(this.parentNode.parentNode)">[X]</a></td>
+                            <td><a class="fake" onclick="remove(this.parentNode.parentNode)">[X]</a></td>
                         </tr>
                         `
             collaboratorTable.insertAdjacentHTML('beforeend', row);

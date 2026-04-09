@@ -1,13 +1,17 @@
+@php use App\Enums\TicketStatus;use App\Enums\UserRole; @endphp
 @extends("layout.main")
 @section("title")
     Ticket Info
 @endsection
 
 @section("content")
+    <div class="status-bar margin-bottom-1">
+        <p class="status-bar-field">New -> In Progress -> Finished</p>
+    </div>
     <div class="title-container">
         <div class="ticket-icon-number-container">
             <img class="icon" src="{{ asset("images/icons/ticket.png") }}" alt="Ticket Icon"/>
-            <span>{{ $ticket->project->issue_prefix . "-" . $ticket->local_id }}</span>
+            <span><a href="{{ route("projects.view", $ticket->project->id) }}">{{ $ticket->project->issue_prefix . "-" . $ticket->local_id }}</a></span>
         </div>
         <div class="field-border" style="padding: 8px; width: 30%; min-width: 200px">
             {{ $ticket->title }}
@@ -17,89 +21,110 @@
         </div>
 
     </div>
+    <!-- Created by -->
     <div class="flex-row gap-4 margin-top-1">
         <img src="{{ asset("images/icons/user_computer-0.png") }}" alt="Creator">
-        <span>Created by {{  $ticket->createdBy->fullName() }}</span>
+        <span>
+            <span>Created by</span>
+            <a href="{{ route('profile.other', $ticket->createdBy->id) }}">{{  $ticket->createdBy->fullName() }}</a>
+        </span>
+
     </div>
+    <!-- Assigned to -->
     <div class="flex-row gap-4 margin-bottom-1">
         <img src="{{ asset("images/icons/users-1.png") }}" alt="Users">
         <span>
             <span>Assigned to</span>
             <span id="assigned-to">
-             @php
-            $assigned = $ticket->assignedTo()->get();
-            if (empty($assigned)) {
-                echo "no one.";
-            } else {
-                echo implode(", ", $assigned->map(function ($c) {
-                    $fullName = $c->fullName();
-                    $r = route("profile.other", $c->id);
-                    return "<a href='$r'>$fullName</a>";
-                })->toArray());
-            }
-            @endphp
-                </span>
+                {{ $ticket->assignedTo()->get()->isEmpty() ? "no one." : ":" }}
+            </span>
         </span>
     </div>
+    <ul id="assigned-to-list">
+        @foreach( $ticket->assignedTo as $collaborator )
+            <li>
+                <a href="{{ route("profile.other", $collaborator->id) }}">{{ $collaborator->fullName() }}</a>
+                @if ( $editable )
+                    <a class="fake" style="margin-left: 8px"
+                       onclick="removeMember({{ $collaborator->id }}, this.parentNode)">[x]</a>
+                @endif
+            </li>
+        @endforeach
+    </ul>
+    <!-- Assign to -->
+    @if ( $editable )
+        <div class="margin-y-1">
+            <x-member-input id="assign-input" :in-project="$ticket->project_id" no-client/>
+            <button onclick="addMember()">Assign</button>
+            <x-input-error for="assign-input"/>
+        </div>
+    @endif
 
-    <div style="gap: 4px; display: flex; flex-wrap: wrap">
-        <span class="status-field-border" style="padding: 6px">
-            Status: <span class="status-value">{{ $ticket->status->getName() }}</span>
+    <!-- Thingies -->
+    <div class="flex-row gap-4">
+        <span class="status-field-border ticket-info-thing">
+            <b>Status:</b> <span class="status-value">{{ $ticket->status->getName() }}</span>
         </span>
-        <span class="status-field-border" style="padding: 6px">
-            Priority: <span class="status-value"
+        <span class="status-field-border ticket-info-thing">
+            <b>Priority:</b> <span class="status-value"
                             style="color: {{ $ticket->priority->getCssColor() }}">{{ $ticket->priority->getName() }}</span>
         </span>
-        <span class="status-field-border" style="padding: 6px">
-            Type: <span class="status-value" style="color: darkred">{{ $ticket->type?->getName() ?? "Unset" }}</span>
+        <span class="status-field-border ticket-info-thing">
+            <b>Type:</b> <span class="status-value">{{ $ticket->type?->getName() ?? "Unset" }}</span>
         </span>
-        <span class="status-field-border" style="padding: 6px">
-            Total Time Spent: <span class="status-value" style="color: darkred"> {{ $totalTime }} </span>
+        <span class="status-field-border ticket-info-thing">
+            <b>Total Time Spent:</b> <span class="status-value"> {{ $totalTime }} </span>
         </span>
     </div>
     <br/>
     <div class="field-border" style="padding: 8px; min-height: 10rem; max-width: 300px">
         {!! nl2br(e($ticket->description)) !!}
     </div>
-    <div class="margin-y-1">
-        <x-member-input id="assign-input" :in-project="$ticket->project_id" no-client />
-        <button onclick="addMember()">Assign</button>
-        <x-input-error for="assign-input"/>
-    </div>
+
     <div class="flex-row gap-4 margin-y-1">
         <img src="{{ asset("images/icons/clock-1.png") }}" alt="Clock">
         <b>Time Tracking:</b>
     </div>
-    <div class="sunken-panel small-sunken-table">
-        <table>
-            <thead>
-            <tr>
-                <th>Name</th>
-                <th>Time Spent</th>
-            </tr>
-            </thead>
-            <tbody>
-            @foreach( $logs as $name => $time )
+    <div class="indent">
+        <div class="sunken-panel small-sunken-table">
+            <table>
+                <thead>
                 <tr>
-                    <td>{{ $name }}</td>
-                    <td>{{ $time }}</td>
+                    <th>Name</th>
+                    <th>Time Spent</th>
+                    <th>Actions</th>
                 </tr>
-            @endforeach
-            </tbody>
-        </table>
-    </div>
-    <div>
-        <button onclick="location.href = '{{ route("tickets.log", $ticket->id) }}'">Track Time</button>
+                </thead>
+                <tbody>
+                @foreach( $logs as $log )
+                    <tr>
+                        <td>{{ $log['full_name'] }}</td>
+                        <td>{{ $log['time_spent'] }}</td>
+                        <td class="actions"><a class="fake"
+                                               onclick="showPopup({{ $log['id'] }}, '{{ $log['full_name'] }}')">[Details]</a>
+                        </td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
+        </div>
+        @if (auth()->user()->role != UserRole::CLIENT)
+            <div>
+                <button onclick="location.href = '{{ route("tickets.log", $ticket->id) }}'">Track Time</button>
+            </div>
+        @endif
     </div>
 
     @if( $clientValidation )
-        <form method="post" id="client-validation-form" class="basic-form">
+        <form method="post" id="client-validation-form" class="basic-form indent"
+              action="{{ route("tickets.client.validation", $ticket->id) }}">
+            @csrf
             <div class="flex-row gap-4 margin-y-1">
-                <img src="{{ asset("images/icons/msg_warning-2.png") }}" alt="Warning">
+                <img src="{{ asset("images/icons/msg_warning-0.png") }}" alt="Warning">
                 <b>
                     This ticket is awaiting validation from you!
                 </b>
-                <img src="{{ asset("images/icons/msg_warning-2.png") }}" alt="Warning">
+                <img src="{{ asset("images/icons/msg_warning-0.png") }}" alt="Warning">
             </div>
             <p>
                 One or multiple collaborators want to make this ticket billed. Do you accept?
@@ -115,49 +140,69 @@
             <input type="submit" value="Submit"/>
         </form>
     @endif
-    @if ( $ticket->status == \App\Enums\TicketStatus::REFUSED )
+    @if ( $ticket->status == TicketStatus::REFUSED )
         <div>
             <div class="flex-row gap-4 margin-y-1">
-                <img src="{{ asset("images/icons/msg_warning-2.png") }}" alt="Warning">
-                <b>Refusal Reason</b>
+                <img src="{{ asset("images/icons/msg_warning-0.png") }}" alt="Warning">
+                <b>Client refused making this ticket billed!</b>
             </div>
-            <div class="field-border" style="padding: 8px; min-height: 5rem; max-width: 200px">
-                {!! nl2br(e($ticket->refuse_reason)) !!}
+            <div class="indent">
+                <p>Reason provided:</p>
+                <div class="field-border" style="padding: 8px; min-height: 5rem; max-width: 300px">
+                    {!! nl2br(e($ticket->refuse_reason)) !!}
+                </div>
             </div>
         </div>
-        <br/>
     @endif
-    <p>
-        <b>Attachments: (UNIMPLEMENTED)</b>
-    </p>
-    <div class="sunken-panel small-sunken-table">
-        <table>
-            <thead>
-            <tr>
-                <th>File name</th>
-                <th>Size</th>
-                <th>Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-                <td>latest.log</td>
-                <td>4.1ko</td>
-                <td><a href="#">Download</a><span style="width: 8px; display: inline-block"></span><a
-                        href="#">[x]</a></td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
     @if( $editable )
-        <button onclick="location.href = '{{ route("tickets.edit", $ticket->id) }}'">Edit</button>
+        <p>
+            <b>Ticket actions:</b>
+        </p>
+        <div>
+            <button onclick="location.href = '{{ route("tickets.edit", $ticket->id) }}'">Edit</button>
+            <form action="{{route('tickets.destroy')}}" method="post" style="display: inline">
+                @csrf
+                @method('DELETE')
+                <input type="hidden" name="id" value="{{ $ticket->id }}">
+                <input type="submit" value="Delete"/>
+            </form>
+        </div>
     @endif
+    <dialog id="logs-dialog" closedby="any">
+        <div class="window">
+            <div class="title-bar">
+                <div class="title-bar-text" id="popup-title">
+                    Lorem ipsum
+                </div>
+                <div class="title-bar-controls">
+                    <button aria-label="Close" onclick="document.getElementById('logs-dialog').close()"></button>
+                </div>
+            </div>
+            <div class="window-body">
+                <div class="sunken-panel">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Time Spent</th>
+                            <th>Comment</th>
+                        </tr>
+                        </thead>
+                        <tbody id="details-body"></tbody>
+                    </table>
+                </div>
+                <div class="margin-top-1">
+                    <button aria-label="Close" onclick="document.getElementById('logs-dialog').close()">Close</button>
+                </div>
+            </div>
+        </div>
+    </dialog>
 @endsection
 @section('inline-script')
     <script>
         const memberInput = document.getElementById("assign-input");
         const memberInputError = document.getElementById("assign-input-error");
         const assignedTo = document.getElementById("assigned-to");
+        const assignedToList = document.getElementById("assigned-to-list");
         const routeTemplate = "{{ route('profile.other', '%d') }}"
 
         async function addMember() {
@@ -174,7 +219,6 @@
             })
 
 
-
             let result = await response.json()
 
             if (response.ok) {
@@ -188,12 +232,60 @@
 
 
             if (assignedTo.innerHTML === "no one.") {
-                assignedTo.innerHTML = `<a href="${routeTemplate.replace("%d", member.id)}">${member.full_name}</a>`
-            } else {
-                assignedTo.innerHTML += `, <a href="${routeTemplate.replace("%d", member.id)}">${member.full_name}</a>`
+                assignedTo.innerHTML = ":"
             }
+            const li = document.createElement("li");
+            li.innerHTML += `<a href="${routeTemplate.replace("%d", member.id)}">${member.full_name}</a>`
+            assignedToList.appendChild(li);
 
             membersTable.appendChild(row);
+        }
+
+        async function removeMember(memberId, li) {
+            await fetch("{{route("api.tickets.assigned.store")}}", {
+                method: "DELETE",
+                headers: csrf({
+                    'Content-Type': 'application/json',
+                }),
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    id: {{ $ticket->id }},
+                    member_id: memberId,
+                })
+            })
+            li.remove();
+        }
+
+        const logsDialog = document.getElementById("logs-dialog");
+        const detailsBody = document.getElementById("details-body");
+        const popupTitle = document.getElementById("popup-title");
+
+        async function showPopup(userId, fullName) {
+            let route = "{{ route("api.tickets.logs") }}";
+            let params = new URLSearchParams({
+                user_id: userId,
+                ticket_id: {{ $ticket->id }},
+            });
+            popupTitle.innerHTML = fullName + "'s logs";
+            const response = await fetch(
+                route + "?" + params,
+                {headers: csrf({'Accept': 'application/json'}), credentials: "same-origin"}
+            )
+            const json = await response.json();
+            console.log(json);
+            if (!response.ok) return;
+            detailsBody.innerHTML = "";
+            for (const log of json) {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                <td>${log.time_spent}</td>
+                <td>${log.comment}</td>
+                `;
+                detailsBody.appendChild(row);
+            }
+
+            logsDialog.showModal();
+
         }
     </script>
 @endsection

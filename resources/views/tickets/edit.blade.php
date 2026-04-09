@@ -1,7 +1,7 @@
 @php
     use App\Enums\TicketKind;
     use App\Enums\TicketPriority;
-    use App\Enums\TicketType;
+    use App\Enums\TicketStatus;use App\Enums\TicketType;
 @endphp
 @extends("layout.main")
 @section("title")
@@ -31,8 +31,14 @@
                           :default="old('priority') ?? $ticket->priority->value"/>
             </div>
             <div class="field-row-stacked">
+                <label for="status">Status</label>
+                <x-select id="status" placeholder="Select Status" :options="$statusOptions"
+                          :default="old('status') ?? $ticket->status->value"/>
+            </div>
+            <div class="field-row-stacked">
                 <label for="ticket-type">Type</label>
-                <x-select id="ticket-type" placeholder="Select Type" :options="TicketType::keyToName()" :default="old('ticket-type') ?? $ticket->type?->value ?? ''"/>
+                <x-select id="ticket-type" placeholder="Select Type" :options="TicketType::keyToName()"
+                          :default="old('ticket-type') ?? $ticket->type?->value ?? ''"/>
             </div>
             <div class="field-row-stacked" style="width: 300px">
                 <label for="description">Description</label>
@@ -48,6 +54,7 @@
             let valid = true;
             valid &= checkInput('project', 'project-error', [emptyCondition("A ticket must be linked to a project!")]);
             valid &= checkInput('title', 'title-error', [emptyCondition("A ticket must have a title!")]);
+            valid &= checkInput('status', 'status-error', [emptyCondition("A ticket must have a status!")]);
             valid &= checkInput('ticket-kind', 'ticket-kind-error', [emptyCondition("A ticket must have a kind!")]);
             valid &= checkInput('priority', 'priority-error', [emptyCondition("A ticket must have to a priority!")]);
             if (!valid) e.preventDefault();

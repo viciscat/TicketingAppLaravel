@@ -27,5 +27,7 @@
             </tbody>
         </table>
     </div>
-    <button onclick="location.href = '{{route("projects.create")}}'">Create new project</button>
+    @if ( $canCreate )
+        <button onclick="location.href = '{{route("projects.create")}}'">Create new project</button>
+    @endif
 @endsection

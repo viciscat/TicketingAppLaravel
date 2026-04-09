@@ -20,7 +20,7 @@
             </div>
             <div class="field-row-stacked">
                 <label for="time-spent">Time Spent</label>
-                <div class="input-horizontal-container" id="time-spent-container">
+                <div class="flex-row gap-4" id="time-spent-container">
                     <input type="text" id="time-spent-fake" oninput="parseDuration()" />
                     <span></span>
                 </div>

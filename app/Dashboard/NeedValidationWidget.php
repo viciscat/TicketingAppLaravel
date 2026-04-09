@@ -26,7 +26,7 @@ class NeedValidationWidget implements DashboardWidget
         if (Auth::user()->role != UserRole::CLIENT) return "0";
         $query = Ticket::where("status", "=", TicketStatus::WAITING_FOR_VALIDATION);
         $query->whereHas('project.members', function ($query) {
-            $query->where("users_id", "=", Auth::user()->id);
+            $query->where("id", "=", Auth::user()->id);
         });
         return $query->count();
     }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -14,6 +15,8 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    Route::patch('/profile/{id}/role', [UserController::class, 'updateRole'])->name('user.role.update');
+
     Route::get('/tickets', [App\Http\Controllers\TicketController::class, 'list'])->name('tickets.list');
     Route::get('/tickets/create', [App\Http\Controllers\TicketController::class, 'create'])->name('tickets.create');
     Route::post('/tickets/store', [App\Http\Controllers\TicketController::class, 'store'])->name('tickets.store');
@@ -26,6 +29,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/tickets/delete', [App\Http\Controllers\TicketController::class, 'destroy'])->name('tickets.destroy');
 
     Route::get('/projects', [App\Http\Controllers\ProjectController::class, 'list'])->name('projects.list');
+    Route::get('/contracts/{id}/view', [App\Http\Controllers\ProjectController::class, 'viewContract'])->name('contracts.view');
     Route::get('/projects/create', [App\Http\Controllers\ProjectController::class, 'create'])->name('projects.create');
     Route::post('/projects/store', [App\Http\Controllers\ProjectController::class, 'store'])->name('projects.store');
     Route::get('/projects/{id}/view', [App\Http\Controllers\ProjectController::class, 'view'])->name('projects.view');

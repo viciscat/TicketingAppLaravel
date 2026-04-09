@@ -41,6 +41,19 @@
             </table>
         </div>
     </div>
+    @if ( !$projectsOvertime->isEmpty() )
+        <div class="flex-row gap-4 margin-y-1">
+            <img src="{{ asset("images/icons/msg_warning-0.png") }}" alt="Warning">
+            <b>Some projects have used all their included time!</b>
+        </div>
+        <ul>
+            @foreach( $projectsOvertime as $project )
+                <li>
+                    <a href="{{ route("projects.view", $project->id) }}">{{ $project->name }}</a>
+                </li>
+            @endforeach
+        </ul>
+    @endif
 
 
 @endsection

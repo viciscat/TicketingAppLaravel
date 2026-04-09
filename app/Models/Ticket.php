@@ -6,6 +6,8 @@ use App\Enums\TicketKind;
 use App\Enums\TicketPriority;
 use App\Enums\TicketStatus;
 use App\Enums\TicketType;
+use App\Enums\UserRole;
+use Auth;
 use Database\Factories\TicketFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -68,6 +70,20 @@ class Ticket extends Model
     public function logs(): HasMany
     {
         return $this->hasMany(TimeLog::class, 'ticket_id');
+    }
+
+    public function canEdit(User $user = null): bool
+    {
+        if (!$user) $user = Auth::user();
+        if ($user->role == UserRole::ADMIN) return true;
+        if ($user->role == UserRole::CLIENT) return false;
+        return $this->isAssignedTo($user) || $this->createdBy->id == $user->id;
+    }
+
+    public function hasAccess(User $user = null): bool
+    {
+        if (!$user) $user = Auth::user();
+        return $this->project->hasAccess($user);
     }
 
     protected static function booted(): void

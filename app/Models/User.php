@@ -67,4 +67,14 @@ class User extends Authenticatable
     {
         return $this->first_name . " " . $this->last_name;
     }
+
+    public function canCreateProjects(): bool
+    {
+        return $this->role == UserRole::ADMIN;
+    }
+
+    public function canCreateTickets(): bool
+    {
+        return $this->role !== UserRole::CLIENT;
+    }
 }

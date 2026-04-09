@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -41,5 +42,16 @@ class UserController extends Controller
             ];
         })->values()->all();
         return response()->json($users);
+    }
+
+    public function updateRole(Request $request, $id) {
+        $validated = $request->validate([
+            "role" => ["required", Rule::enum(UserRole::class)],
+        ]);
+        $user = User::find($id);
+        if (!$user) abort(404);
+        $user->role = UserRole::from($validated["role"]);
+        $user->save();
+        return redirect()->back();
     }
 }

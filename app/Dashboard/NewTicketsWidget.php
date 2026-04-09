@@ -26,7 +26,7 @@ class NewTicketsWidget implements DashboardWidget
         $query = Ticket::where("status", "=", TicketStatus::NEW);
         if (Auth::user()->role != UserRole::ADMIN) {
             $query->whereHas('project.members', function ($query) {
-                $query->where("users_id", "=", Auth::user()->id);
+                $query->where("id", "=", Auth::user()->id);
             });
         }
         return $query->count();

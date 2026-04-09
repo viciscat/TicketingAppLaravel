@@ -7,7 +7,6 @@
         <label for="language">Language</label>
         <select id="language">
           <option value="en">English</option>
-          <option value="fr">French</option>
         </select>
       </div>
       <div class="field-row">

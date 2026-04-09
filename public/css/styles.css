@@ -40,13 +40,13 @@
     margin-bottom: 1rem;
 }
 
-img {
-    image-rendering: pixelated;
-}
-
 .margin-y-1 {
     margin-top: 1rem;
     margin-bottom: 1rem;
+}
+
+img {
+    image-rendering: pixelated;
 }
 
 .sunken-panel {
@@ -124,9 +124,13 @@ td.fit {
     white-space: nowrap;
 }
 
+.indent {
+    margin-left: 8px;
+}
+
 
 /*
-    WINDOW STUFF
+    98.css EDITS
  */
 
 .window {
@@ -168,33 +172,10 @@ td.fit {
 
 .basic-form .field-row-stacked {
     width: fit-content;
-    min-width: 150px;
 }
 
-input[type=file]::file-selector-button, input[type=button] {
-    background: silver;
-    border: none;
-    border-radius: 0;
-    box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff, inset -2px -2px grey, inset 2px 2px #dfdfdf;
-    box-sizing: border-box;
-    color: transparent;
-    min-height: 23px;
-    min-width: 75px;
-    padding: 0 12px;
-    text-shadow: 0 0 #222;
-    font-family: "Pixelated MS Sans Serif 16px", Arial, sans-serif;
-}
-
-input[type=file]::file-selector-button:active {
-    box-shadow: inset -1px -1px #fff, inset 1px 1px #0a0a0a, inset -2px -2px #dfdfdf, inset 2px 2px grey;
-    text-shadow: 1px 1px #222
-}
-
-.input-horizontal-container {
-    display: flex;
-    flex-direction: row;
-    gap: 4px;
-    align-items: center;
+.basic-form .field-row-stacked > input {
+    width: 200px;
 }
 
 /*
@@ -249,6 +230,7 @@ input[type=file]::file-selector-button:active {
     margin: 2rem auto auto;
 }
 
+
 .login-form-input {
     display: flex;
     flex-direction: row;
@@ -262,24 +244,16 @@ input[type=file]::file-selector-button:active {
     STUFF I DON'T KNOW WHERE ELSE TO PUT
  */
 
-
-.sunken-panel.list {
-    max-height: 20rem;
-    width: fit-content;
-    min-width: 500px;
-}
-
-
 .status-value {
     margin-left: 2px;
 }
+
 
 .small-sunken-table {
     max-width: 100%;
     min-width: 250px;
     width: min-content;
 }
-
 
 /**
     DASHBOARD STUFF
@@ -337,24 +311,10 @@ input[type=file]::file-selector-button:active {
     gap: 2px;
 }
 
-.contract-container {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 8px;
+.ticket-info-thing {
+    padding: 6px;
 }
 
-#success-message {
-    padding: 8px 4px;
-}
-
-.collaborators-input-container {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-}
 /*
     POPUP
  */
@@ -383,7 +343,7 @@ dialog {
         flex-shrink: 0;
     }
 
-    .sunken-panel.list {
-        min-width: 300px;
+    .indent {
+        margin-left: 4px;
     }
 }

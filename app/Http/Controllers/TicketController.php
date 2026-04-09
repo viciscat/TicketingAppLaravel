@@ -23,36 +23,10 @@ class TicketController extends Controller
 {
     public function list(Request $request)
     {
-        $status = TicketStatus::tryFrom($request['filter-status'] ?? null);
-        $type = TicketType::tryFrom($request['filter-type'] ?? null);
-        $query = Ticket::with('project');
-        if (Auth::user()->role != UserRole::ADMIN) {
-            $query->whereHas('project.members', function ($q) {
-                $q->where('user_id', Auth::user()->id);
-            });
-        }
-        if ($status) {
-            $query->where('status', '=', $status);
-        }
-        if ($type) {
-            $query->where('type', '=', $type);
-        }
-        return view('tickets.list', ["tickets" => $query->get()]);
-
-        // TODO TODO TODO
-        // TODO TODO TODO
-        // TODO TODO TODO
-        // TODO TODO TODO
-        // replace weird href shenanigans with class="fake"
-        // TODO TODO TODO
-        // TODO TODO TODO
-        // TODO TODO TODO
-        // TODO TODO TODO
-        // TODO TODO TODO
-        // TODO TODO TODO
+        return view('tickets.list', ["canCreate" => Auth::user()->canCreateTickets()]);
     }
 
-    public function listApi(Request $request) {
+    public function apiList(Request $request) {
         $status = TicketStatus::tryFrom($request['status'] ?? null);
         $type = TicketType::tryFrom($request['type'] ?? null);
         $validated = $request->validate([
@@ -63,9 +37,9 @@ class TicketController extends Controller
         ]);
         $query = Ticket::with('project');
         // TODO remove the thingy after testy test
-        if (Auth::user() != null && Auth::user()->role != UserRole::ADMIN) {
+        if (Auth::user() != null && Auth::user()->role != UserRole::ADMIN && !isset($validated['in-project'])) {
             $query->whereHas('project.members', function ($q) {
-                $q->where('id', '=', Auth::id());
+                $q->where('user_id', '=', Auth::id());
             });
         }
         if ($status) {
@@ -122,13 +96,11 @@ class TicketController extends Controller
     {
         if (Auth::user()->role == UserRole::CLIENT) return view('error', [
             "message" => "You are unauthorized to create tickets.",
-            "goBack" => "tickets.list"
+            "goBack" => route("tickets.list")
         ]);
         $query = Project::query();
         if (Auth::user()->role != UserRole::ADMIN) {
-            $query->whereHas('project.members', function ($q) {
-                $q->where('user_id', Auth::user()->id);
-            });
+            $query->whereRelation('members', 'id', '=', Auth::id());
         }
         return view('tickets.create', ['projects' => $query->get()]);
     }
@@ -136,21 +108,25 @@ class TicketController extends Controller
     public function view($id)
     {
         $ticket = Ticket::with(['project', 'createdBy'])->find($id);
-        if ($ticket && Auth::user()->role != UserRole::ADMIN && !$ticket->project->hasMember(Auth::user())) {
-            return view('error', [
-                "message" => "You are unauthorized to view this ticket.",
-                "goBack" => "tickets.list"
-            ]);
-        }
         if (!$ticket) return view('error', [
             "message" => "Unknown ticket.",
-            "goBack" => "tickets.list"
+            "goBack" => route("tickets.list")
+        ]);
+
+        if (!$ticket->hasAccess()) return view('error', [
+            "message" => "You don't have access to this ticket.",
+            "goBack" => route("tickets.list")
         ]);
         $logsByUser = $ticket->logs()
             ->with('user')
             ->get()
-            ->groupBy(fn($log) => $log->user->fullName())
-            ->map(fn($logs) => TimeLog::formatDuration($logs->sum('time_spent')));
+            ->groupBy(fn($log) => $log->user_id)
+            ->map(fn($logs) => [
+                'id'    => $logs->first()->user_id,
+                'full_name'  => $logs->first()->user->fullName(),
+                'time_spent' => TimeLog::formatDuration($logs->sum('time_spent')),
+            ])
+            ->values();
         $totalTime = $ticket->logs()->sum('time_spent');
         $clientValidation = Auth::user()->role == UserRole::CLIENT && $ticket->status == TicketStatus::WAITING_FOR_VALIDATION;
         return view('tickets.view', [
@@ -158,7 +134,7 @@ class TicketController extends Controller
                 'logs' => $logsByUser,
                 'totalTime' => TimeLog::formatDuration($totalTime),
                 'clientValidation' => $clientValidation,
-                'editable' => Auth::user()->role == UserRole::ADMIN || $ticket->assignedTo()->find(Auth::user()->id)->exists() || $ticket->createdBy->id == Auth::user()->id,
+                'editable' => $ticket->canEdit(),
             ]
         );
     }
@@ -166,30 +142,44 @@ class TicketController extends Controller
     public function edit($id)
     {
         $ticket = Ticket::query()->find($id);
-        if (Auth::user()->role != UserRole::ADMIN && $ticket && Auth::user()->role == UserRole::CLIENT || !$ticket->project()->hasMember(Auth::user()) || !$ticket->isAssignedTo(Auth::user())) {
+        if (!$ticket) return view('error', [
+            "message" => "Unknown ticket.",
+            "goBack" => route("tickets.list")
+        ]);
+        if (!$ticket->hasAccess() || !$ticket->canEdit()) {
             return view('error', [
                 "message" => "You are unauthorized to view this ticket.",
-                "goBack" => "tickets.list"
+                "goBack" => route("tickets.list")
             ]);
         }
-        if (!$ticket) abort(404);
-        return view('tickets.edit', ['ticket' => $ticket]);
+        $except = [];
+        if (Auth::user()->role == UserRole::DEVELOPER) {
+            $except = [TicketStatus::REFUSED, TicketStatus::ACCEPTED, TicketStatus::WAITING_FOR_VALIDATION];
+        }
+        return view('tickets.edit', ['ticket' => $ticket, 'statusOptions' => TicketStatus::keyToName($except)]);
     }
 
     public function log($id)
     {
-        // TODO check they are allowed
+        if (Auth::user()->role == UserRole::CLIENT) return view('error', [
+            "message" => "You are unauthorized to log in this ticket.",
+            "goBack" => route("tickets.list")
+        ]);
         $ticket = Ticket::query()->find($id);
         if (!$ticket) return view('error', [
             "message" => "Unknown ticket.",
-            "goBack" => "tickets.list"
+            "goBack" => route("tickets.list")
+        ]);
+        if (!$ticket->hasAccess(Auth::user())) return view('error', [
+            "message" => "You don't have access to this ticket.",
+            "goBack" => route("tickets.list")
         ]);
         return view('tickets.log', ['ticket' => $ticket]);
     }
 
     public function store(Request $request)
     {
-        // TODO check permissions
+        if (Auth::user()->role == UserRole::CLIENT) abort(403);
         $validated = $request->validate([
             'title' => 'required',
             'project' => ['required', 'exists:projects,id'],
@@ -198,6 +188,8 @@ class TicketController extends Controller
             'priority' => Rule::enum(TicketPriority::class),
             'description' => 'required',
         ]);
+
+        if (!Project::find($validated['project'])->hasAccess(Auth::user())) abort(403);
 
         $ticket = Ticket::create([
             'title' => $validated['title'],
@@ -220,9 +212,10 @@ class TicketController extends Controller
 
     public function storeLog(Request $request, $id)
     {
-        // TODO check permissions
+        if (Auth::user()->role == UserRole::CLIENT) abort(403);
         $ticket = Ticket::query()->find($id);
         if (!$ticket) abort(404);
+        if (!$ticket->hasAccess()) abort(403);
         $validated = $request->validate([
             'start' => ["nullable", "date"],
             'time-spent' => ["required", "numeric"],
@@ -272,11 +265,39 @@ class TicketController extends Controller
         ], 201);
     }
 
+    public function apiUnassign(Request $request)
+    {
+        $validated = $request->validate([
+            "id" => ["required", "exists:tickets,id"],
+            'member_id' => ["required", "exists:users,id"],
+        ]);
+        $ticket = Ticket::find($validated['id']);
+        if (!$ticket->canEdit(Auth::user())) abort(403);
+        $ticket->assignedTo()->detach($validated['member_id']);
+        return response()->json();
+    }
+
+    public function apiGetLogs(Request $request) {
+        $validated = $request->validate([
+            "ticket_id" => ["required", "exists:tickets,id"],
+            'user_id' => ["required", "exists:users,id"],
+        ]);
+        $ticket = Ticket::with('logs')->find($validated['ticket_id']);
+        if (!$ticket->hasAccess()) abort(403);
+        $logs = $ticket->logs()->where('user_id', '=', $validated['user_id'])->get();
+        $logs = $logs->map(function ($log) {
+            $array = $log->toArray();
+            $array['time_spent'] = TimeLog::formatDuration($array['time_spent']);
+            return $array;
+        });
+        return response()->json($logs);
+    }
+
     public function update(Request $request, $id)
     {
-        // TODO check permissions
         $ticket = Ticket::query()->find($id);
         if (!$ticket) abort(404);
+        if (!$ticket->hasAccess() || !$ticket->canEdit()) abort(403);
         $validated = $request->validate([
             'title' => 'required',
             'ticket-kind' => Rule::enum(TicketKind::class),
@@ -310,13 +331,21 @@ class TicketController extends Controller
 
     public function destroy(Request $request)
     {
-        // TODO permissions
+        $role = Auth::user()->role;
+        if ($role == UserRole::CLIENT) return view('error', [
+            'message' => "You aren't authorized to delete tickets.",
+            'goBack' => route("tickets.list")
+        ]);
         $validated = $request->validate([
             'id' => ['required', 'integer', 'exists:tickets,id'],
         ]);
         $ticket = Ticket::query()->find($validated['id']);
+        if (!$ticket->canEdit()) return view('error', [
+            'message' => "You cannot delete this ticket.",
+            'goBack' => route("tickets.list")
+        ]);
         $ticket->delete();
-        return redirect()->route('tickets.list');
+        return redirect()->back();
     }
 
     public function clientValidation(Request $request, $id) {

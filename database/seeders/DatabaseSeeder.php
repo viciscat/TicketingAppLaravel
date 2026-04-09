@@ -20,10 +20,22 @@ class DatabaseSeeder extends Seeder
         User::factory(100)->create();
 
         User::factory()->create([
-            'first_name' => 'Test',
+            'first_name' => 'Admin',
             'last_name' => 'User',
-            'email' => 'test@example.com',
-            'role' => 'admin',
+            'email' => 'admin@example.com',
+            'role' => UserRole::ADMIN,
+        ]);
+        $devUser = User::factory()->create([
+            'first_name' => 'Dev',
+            'last_name' => 'User',
+            'email' => 'dev@example.com',
+            'role' => UserRole::DEVELOPER,
+        ]);
+        $clientUser = User::factory()->create([
+            'first_name' => 'Client',
+            'last_name' => 'User',
+            'email' => 'client@example.com',
+            'role' => UserRole::CLIENT,
         ]);
 
         $projects = [
@@ -55,9 +67,7 @@ class DatabaseSeeder extends Seeder
         foreach ($projects as $index => $projectData) {
             $contractData = $contracts[$index];
 
-            // Génération d'un nom de fichier de contrat cohérent
-            $slug = strtolower(str_replace(' ', '_', $projectData['name']));
-            $contractData['file'] = "contracts/{$slug}_contrat_2026.pdf";
+            $contractData['file'] = "test_pdf.pdf";
 
             $contract = Contract::create($contractData);
 
@@ -72,8 +82,15 @@ class DatabaseSeeder extends Seeder
         $users = User::all();
         // Project members
         Project::all()->each(function (Project $project) use ($users) {
-            $project->members()->attach($users->random(rand(1, 4))->pluck('id')->toArray());
+            $project->members()->attach($users->random(rand(4, 7))->pluck('id')->toArray());
         });
+
+        $project = Project::find(1);
+        if (!$project->members()->where('id', '=', $devUser->id)->exists())
+            $project->members()->attach($devUser);
+        $project = Project::find(2);
+        if (!$project->members()->where('id', '=', $clientUser->id)->exists())
+            $project->members()->attach($clientUser);
 
 
         Ticket::factory(70)->create();
