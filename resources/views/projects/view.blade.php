@@ -97,6 +97,7 @@
             <br>
             <span>Billed time: </span>
             <span>{{ $timeBilled }}</span>
+            <span>({{ $price }}€)</span>
         </p>
         @if( $overTime )
             <div class="flex-row gap-4">

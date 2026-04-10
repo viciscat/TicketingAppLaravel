@@ -50,16 +50,18 @@ class ProjectController extends Controller
             ->join('time_logs', 'tickets.id', '=', 'time_logs.ticket_id')
             ->sum('time_logs.time_spent');
         $timeIncludedFormatted = TimeLog::formatDuration($timeIncluded);
-        $timeBilled = TimeLog::formatDuration($project->tickets()
+        $timeBilled = $project->tickets()
             ->where('type', '=', TicketType::BILLED)
             ->join('time_logs', 'tickets.id', '=', 'time_logs.ticket_id')
-            ->sum('time_logs.time_spent')
-        );
+            ->sum('time_logs.time_spent');
+        $timeBilledFormatted = TimeLog::formatDuration($timeBilled);
+        $price = round($project->contract->extra_hourly_rate * $timeBilled / 60, 2);
         $overTime = $timeIncluded > $project->contract->included_hours * 60;
         return view('projects.view', [
             'project' => $project,
             'timeIncluded' => $timeIncludedFormatted,
-            'timeBilled' => $timeBilled,
+            'timeBilled' => $timeBilledFormatted,
+            'price' => $price,
             'overTime' => $overTime,
             'canEdit'=> $project->canEdit(Auth::user()),
             'canCreateTicket' => Auth::user()->canCreateTickets(),

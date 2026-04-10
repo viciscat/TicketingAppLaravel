@@ -279,7 +279,7 @@
                 const row = document.createElement("tr");
                 row.innerHTML = `
                 <td>${log.time_spent}</td>
-                <td>${log.comment}</td>
+                <td style="text-wrap: auto">${log.comment}</td>
                 `;
                 detailsBody.appendChild(row);
             }

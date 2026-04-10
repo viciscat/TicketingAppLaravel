@@ -12,7 +12,7 @@
       <div class="field-row">
       <label>Bumpscosity:</label>
       <label for="bumpscosity">Low</label>
-      <input id="bumpscosity" type="range" min="1" max="11" value="5" />
+      <input id="bumpscosity" type="range" min="1" max="11" value="5" style="width: 200px"/>
       <label>High</label>
       </div>
 @endsection
